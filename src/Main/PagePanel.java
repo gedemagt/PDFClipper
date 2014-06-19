@@ -33,7 +33,7 @@ public class PagePanel extends JPanel {
 
         setBackground(Color.WHITE);
         setBorder(new LineBorder(Color.BLACK));
-        setPreferredSize(new Dimension(200,200));
+        setPreferredSize(PDPage.PAGE_SIZE_A4.createDimension());
     }
 
 

@@ -1,6 +1,8 @@
 package Elements;
 
 import javax.swing.*;
+import javax.swing.plaf.basic.BasicArrowButton;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -17,7 +19,7 @@ public class PageChooser extends JPanel {
     private PageChooserListener listener;
 
     public PageChooser() {
-        left = new JButton("<");
+        left = new BasicArrowButton(BasicArrowButton.WEST);
         left.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -28,7 +30,7 @@ public class PageChooser extends JPanel {
                 }
             }
         });
-        right = new JButton(">");
+        right = new BasicArrowButton(BasicArrowButton.EAST);
         right.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -44,10 +46,12 @@ public class PageChooser extends JPanel {
         add(text);
         add(right);
         updateLabel();
+        setOpaque(false);
     }
 
     private void updateLabel() {
-        text.setText(number+1 +" of " + max_number);
+        int displayNumber = max_number == 0 ? 0 : number+1;
+        text.setText(displayNumber +" of " + max_number);
     }
 
     public void setMax(int max){
