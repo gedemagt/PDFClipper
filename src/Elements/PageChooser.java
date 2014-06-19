@@ -10,7 +10,7 @@ import java.awt.event.ActionListener;
 public class PageChooser extends JPanel {
 
     private JButton left, right;
-    private JTextField text;
+    private JLabel text;
 
     private int number = 0;
     private int max_number = 0;
@@ -21,10 +21,10 @@ public class PageChooser extends JPanel {
         left.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(number>1) {
+                if(number>=1) {
                     number--;
                     listener.onNewPage(number);
-                    text.setText(number+"");
+                    updateLabel();
                 }
             }
         });
@@ -35,17 +35,19 @@ public class PageChooser extends JPanel {
                 if(number<max_number-1) {
                     number++;
                     listener.onNewPage(number);
-                    text.setText(number+"");
+                    updateLabel();
                 }
             }
         });
-        text = new JTextField();
-        text.setColumns(2);
+        text = new JLabel();
         add(left);
         add(text);
         add(right);
-        text.setEditable(false);
-        text.setText(number + "");
+        updateLabel();
+    }
+
+    private void updateLabel() {
+        text.setText(number+1 +" of " + max_number);
     }
 
     public void setMax(int max){
@@ -53,8 +55,8 @@ public class PageChooser extends JPanel {
         if(number >= max) {
             number = max;
             listener.onNewPage(number);
-            text.setText(number+"");
         }
+        updateLabel();
         repaint();
     }
 

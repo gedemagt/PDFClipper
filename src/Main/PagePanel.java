@@ -1,5 +1,6 @@
 package Main;
 
+import Elements.LazyPage;
 import org.apache.pdfbox.pdfviewer.PDFPagePanel;
 import org.apache.pdfbox.pdfviewer.PageDrawer;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -27,7 +28,6 @@ public class PagePanel extends JPanel {
     }
 
     private PagePanelListener listener;
-    private Image pdf;
 
     public PagePanel() {
 
@@ -58,6 +58,20 @@ public class PagePanel extends JPanel {
         setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
         listener.onNewPage(this, page);
         revalidate();
+    }
+
+    public void setLazyPage(LazyPage page) {
+        this.page = page.getPage();
+        try {
+            image = page.getImage();
+            showImage = image;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+        listener.onNewPage(this, this.page);
+        revalidate();
+        repaint();
     }
 
 /*    public void zoom(double x) {

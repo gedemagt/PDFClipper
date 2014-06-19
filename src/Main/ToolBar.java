@@ -1,8 +1,7 @@
 package Main;
 
+import Elements.LazyPage;
 import Elements.PageChooser;
-import org.apache.pdfbox.io.RandomAccessBuffer;
-import org.apache.pdfbox.io.RandomAccessFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
@@ -12,7 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,7 +19,7 @@ import java.util.List;
  */
 public class ToolBar extends JToolBar {
 
-    private List<PDPage> pages = Collections.EMPTY_LIST;
+    private List<LazyPage> pages = new ArrayList<LazyPage>();
     private Saver saver;
     private PagePanel pagePanel;
     private SelectionManager manager;
@@ -56,7 +55,7 @@ public class ToolBar extends JToolBar {
         pageChooser.setListener(new PageChooser.PageChooserListener() {
             @Override
             public void onNewPage(int i) {
-                pagePanel.setPage(pages.get(i));
+                pagePanel.setLazyPage(pages.get(i));
             }
         });
         add(pageChooser);
@@ -93,13 +92,34 @@ public class ToolBar extends JToolBar {
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
-                    pages = doc.getDocumentCatalog().getAllPages();
+                    List<PDPage> docPages = doc.getDocumentCatalog().getAllPages();
+                    pages.clear();
+                    for(PDPage p : docPages) {
+                        pages.add(new LazyPage(p));
+                    }
                     pageChooser.setMax(pages.size());
-                    pagePanel.setPage(pages.get(0));
+                    pagePanel.setLazyPage(pages.get(0));
+                    preloadPages();
                 }
             }
         });
         add(b);
+    }
+
+    private void preloadPages() {
+        Thread d = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for(LazyPage p : pages) {
+                    try {
+                        p.preLoadImage();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        d.start();
     }
 
 
@@ -155,6 +175,7 @@ public class ToolBar extends JToolBar {
                 int res = fileChooser.showSaveDialog(null);
                 if (res == JFileChooser.APPROVE_OPTION) {
                     File file = fileChooser.getSelectedFile();
+                    if(!file.getAbsolutePath().endsWith(".pdf")) file = new File(file.getAbsolutePath().concat(".pdf"));
                     saver.save(pagePanel.getPage(), manager.getCurrentSelection(), file.getAbsolutePath());
                 }
 
