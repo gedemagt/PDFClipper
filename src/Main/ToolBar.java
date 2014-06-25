@@ -7,8 +7,10 @@ import org.apache.pdfbox.pdmodel.PDPage;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,12 +32,83 @@ public class ToolBar extends JToolBar {
         this.saver = new Saver();
         this.pagePanel = pagePanel;
         this.manager = manager;
+        setAlignmentX(0);
+        setFloatable(false);
         setupSaveButton();
         setupLoadButton();
         setupPageChooser();
+/*        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_O, Event.CTRL_MASK),
+                "load");
+        getActionMap().put("load",
+                new AbstractAction() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        load();
+                    }
+                });
+        getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK),
+                "save");
+        getActionMap().put("save",
+                new AbstractAction() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        save();
+                    }
+                });*/
         //setupZoom();
-        add(Box.createHorizontalGlue());
-        add(new JPanel());
+    }
+
+    private void save() {
+        JFileChooser fileChooser = new JFileChooser() {
+
+            @Override
+            public void approveSelection() {
+                File f = getSelectedFile();
+
+                if (f.exists()) {
+                    int result = JOptionPane.showConfirmDialog(this, "Do you want to overwrite the existing file?", "File already exists", JOptionPane.YES_NO_CANCEL_OPTION);
+
+                    switch (result) {
+                        case JOptionPane.YES_OPTION:
+                            super.approveSelection();
+                            return;
+                        case JOptionPane.NO_OPTION:
+                            return;
+                        case JOptionPane.CLOSED_OPTION:
+                            cancelSelection();
+                            return;
+                        case JOptionPane.CANCEL_OPTION:
+                            cancelSelection();
+                            return;
+                    }
+                }
+
+                super.approveSelection();
+            }
+        };
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new FileFilter() {
+
+            @Override
+            public String getDescription() {
+                return "Portable Document Format (*.pdf)";
+            }
+
+            @Override
+            public boolean accept(File f) {
+                if (f.isDirectory()) {
+                    return true;
+                } else {
+                    return f.getName().toLowerCase().endsWith(".pdf");
+                }
+            }
+        });
+        int res = fileChooser.showSaveDialog(null);
+        if (res == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if(!file.getAbsolutePath().endsWith(".pdf")) file = new File(file.getAbsolutePath().concat(".pdf"));
+            saver.save(pagePanel.getPage(), manager.getCurrentSelection(), file.getAbsolutePath());
+        }
     }
 
 /*    private void setupZoom() {
@@ -61,46 +134,50 @@ public class ToolBar extends JToolBar {
         add(pageChooser);
     }
 
+    private void load() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setFileFilter(new FileFilter() {
+
+            @Override
+            public String getDescription() {
+                return "Portable Document Format (*.pdf)";
+            }
+
+            @Override
+            public boolean accept(File f) {
+                if (f.isDirectory()) {
+                    return true;
+                } else {
+                    return f.getName().toLowerCase().endsWith(".pdf");
+                }
+            }
+        });
+        int res = fileChooser.showOpenDialog(null);
+        if (res == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                doc = PDDocument.loadNonSeq(file, null);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            List<PDPage> docPages = doc.getDocumentCatalog().getAllPages();
+            pages.clear();
+            for(PDPage p : docPages) {
+                pages.add(new LazyPage(p));
+            }
+            pageChooser.setMax(pages.size());
+            pagePanel.setLazyPage(pages.get(0));
+            preloadPages();
+        }
+    }
+
     private void setupLoadButton() {
         JButton b = new JButton("Load");
         b.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fileChooser.setFileFilter(new FileFilter() {
-
-                    @Override
-                    public String getDescription() {
-                        return "Portable Document Format (*.pdf)";
-                    }
-
-                    @Override
-                    public boolean accept(File f) {
-                        if (f.isDirectory()) {
-                            return true;
-                        } else {
-                            return f.getName().toLowerCase().endsWith(".pdf");
-                        }
-                    }
-                });
-                int res = fileChooser.showOpenDialog(null);
-                if (res == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    try {
-                        doc = PDDocument.loadNonSeq(file, null);
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-                    List<PDPage> docPages = doc.getDocumentCatalog().getAllPages();
-                    pages.clear();
-                    for(PDPage p : docPages) {
-                        pages.add(new LazyPage(p));
-                    }
-                    pageChooser.setMax(pages.size());
-                    pagePanel.setLazyPage(pages.get(0));
-                    preloadPages();
-                }
+                load();
             }
         });
         add(b);
@@ -128,56 +205,7 @@ public class ToolBar extends JToolBar {
         button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser() {
-
-                    @Override
-                    public void approveSelection() {
-                        File f = getSelectedFile();
-
-                        if (f.exists()) {
-                            int result = JOptionPane.showConfirmDialog(this, "Do you want to overwrite the existing file?", "File already exists", JOptionPane.YES_NO_CANCEL_OPTION);
-
-                            switch (result) {
-                                case JOptionPane.YES_OPTION:
-                                    super.approveSelection();
-                                    return;
-                                case JOptionPane.NO_OPTION:
-                                    return;
-                                case JOptionPane.CLOSED_OPTION:
-                                    cancelSelection();
-                                    return;
-                                case JOptionPane.CANCEL_OPTION:
-                                    cancelSelection();
-                                    return;
-                            }
-                        }
-
-                        super.approveSelection();
-                    }
-                };
-                fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-                fileChooser.setFileFilter(new FileFilter() {
-
-                    @Override
-                    public String getDescription() {
-                        return "Portable Document Format (*.pdf)";
-                    }
-
-                    @Override
-                    public boolean accept(File f) {
-                        if (f.isDirectory()) {
-                            return true;
-                        } else {
-                            return f.getName().toLowerCase().endsWith(".pdf");
-                        }
-                    }
-                });
-                int res = fileChooser.showSaveDialog(null);
-                if (res == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    if(!file.getAbsolutePath().endsWith(".pdf")) file = new File(file.getAbsolutePath().concat(".pdf"));
-                    saver.save(pagePanel.getPage(), manager.getCurrentSelection(), file.getAbsolutePath());
-                }
+                save();
 
             }
         });

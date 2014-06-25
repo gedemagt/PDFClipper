@@ -86,7 +86,6 @@ public class ToolLayer extends JPanel {
             }
         });
         tl.setOpaque(false);
-        panel.setOpaque(false);
         layered.add(panel, Integer.valueOf(0), 0);
         layered.add(tl, Integer.valueOf(1), 0);
         add(layered);

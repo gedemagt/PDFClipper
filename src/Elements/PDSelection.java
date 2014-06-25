@@ -15,6 +15,10 @@ public class PDSelection extends PDRectangle implements Selection {
     public PDPage crop(PDPage page) {
         PDPage re = new PDPage(page.getCOSDictionary());
         re.setCropBox(this);
+        re.setTrimBox(this);
+        re.setMediaBox(this);
+        re.setBleedBox(this);
+        re.setArtBox(this);
         return re;
     }
 

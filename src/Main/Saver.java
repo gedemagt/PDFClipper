@@ -23,7 +23,6 @@ public class Saver {
     public void save(PDPage p, final Selection selection, String dest) {
 
         PDDocument doc = null;
-        PDRectangle crop = p.getCropBox();
         p = selection.crop(p);
         try {
             doc = new PDDocument();
@@ -34,8 +33,6 @@ public class Saver {
             e.printStackTrace();
         } catch (COSVisitorException e) {
             e.printStackTrace();
-        } finally {
-            p.setCropBox(crop);
         }
     }
 
